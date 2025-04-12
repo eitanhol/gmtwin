@@ -31,7 +31,6 @@ export function ChesscomLink({ onGameSelected, isLoading, setIsLoading }: Chessc
     try {
       // First, check if the user exists
       const userResponse = await fetch(`https://api.chess.com/pub/player/${username}`)
-
       if (!userResponse.ok) {
         if (userResponse.status === 404) {
           setError("User not found on Chess.com")
@@ -42,38 +41,55 @@ export function ChesscomLink({ onGameSelected, isLoading, setIsLoading }: Chessc
         return
       }
 
-      // Get the user's games from the current month
-      const date = new Date()
-      const year = date.getFullYear()
-      const month = date.getMonth() + 1 // JavaScript months are 0-indexed
-
-      const gamesResponse = await fetch(`https://api.chess.com/pub/player/${username}/games/${year}/${month}`)
-
-      if (!gamesResponse.ok) {
-        setError("Couldn't fetch games from Chess.com")
+      // Fetch the list of monthly game archives
+      const archivesResponse = await fetch(`https://api.chess.com/pub/player/${username}/games/archives`)
+      if (!archivesResponse.ok) {
+        setError("Couldn't fetch game archives from Chess.com")
+        setIsLoading(false)
+        return
+      }
+      const archivesData = await archivesResponse.json()
+      if (!archivesData.archives || archivesData.archives.length === 0) {
+        setError("No game archives available for this user.")
         setIsLoading(false)
         return
       }
 
-      const gamesData = await gamesResponse.json()
+      // Iterate from the most recent archive backwards to gather games
+      let aggregatedGames: any[] = []
+      const archives: string[] = archivesData.archives
+      for (let i = archives.length - 1; i >= 0 && aggregatedGames.length < 5; i--) {
+        const archiveUrl = archives[i]
+        const archiveResponse = await fetch(archiveUrl)
+        if (archiveResponse.ok) {
+          const archiveData = await archiveResponse.json()
+          if (archiveData.games && archiveData.games.length > 0) {
+            aggregatedGames.push(...archiveData.games)
+          }
+        }
+      }
 
-      if (!gamesData.games || gamesData.games.length === 0) {
-        setError("No games found for this month. Try a different username or upload a PGN file.")
+      if (aggregatedGames.length === 0) {
+        setError("No games found for this user.")
         setIsLoading(false)
         return
       }
 
-      // Process the games to show only the most recent ones
-      const recentGames = gamesData.games
-        .slice(0, 5) // Get only the 5 most recent games
-        .map((game: any) => ({
-          url: game.url,
-          white: game.white.username,
-          black: game.black.username,
-          result: game.white.result === "win" ? "1-0" : game.black.result === "win" ? "0-1" : "½-½",
-          timestamp: new Date(game.end_time * 1000),
-          pgn: game.pgn,
-        }))
+      // Sort all aggregated games descending by end_time
+      aggregatedGames.sort((a, b) => b.end_time - a.end_time)
+      const recentGames = aggregatedGames.slice(0, 5).map((game: any) => ({
+        url: game.url,
+        white: game.white.username,
+        black: game.black.username,
+        result:
+          game.white.result === "win"
+            ? "1-0"
+            : game.black.result === "win"
+            ? "0-1"
+            : "½-½",
+        timestamp: new Date(game.end_time * 1000),
+        pgn: game.pgn,
+      }))
 
       setGames(recentGames)
       setShowGames(true)
@@ -88,6 +104,12 @@ export function ChesscomLink({ onGameSelected, isLoading, setIsLoading }: Chessc
   const selectGame = (pgn: string) => {
     onGameSelected(pgn)
     setShowGames(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !isLoading && username.trim()) {
+      fetchUserGames()
+    }
   }
 
   return (
@@ -106,6 +128,7 @@ export function ChesscomLink({ onGameSelected, isLoading, setIsLoading }: Chessc
           placeholder="Enter Chess.com username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          onKeyDown={handleKeyDown}
           className="bg-black/20 border-white/10 text-white"
           disabled={isLoading}
         />
@@ -157,7 +180,9 @@ export function ChesscomLink({ onGameSelected, isLoading, setIsLoading }: Chessc
         </div>
       )}
 
-      <div className="text-xs text-white/50 italic">We'll fetch your 5 most recent games from Chess.com</div>
+      <div className="text-xs text-white/50 italic">
+        We'll fetch your 5 most recent games from Chess.com
+      </div>
     </div>
   )
 }

@@ -22,7 +22,7 @@ export const grandmasters: Grandmaster[] = [
       "Winner of 11 Chess Oscars",
     ],
     famousGame: "Kasparov vs. Topalov, Wijk aan Zee 1999 - featuring the famous queen sacrifice",
-    imagePath: "/images/gm/kasparov.jpeg",
+    imagePath: "/images/gm/kasparov.jpg",
   },
   {
     id: "carlsen",
@@ -45,7 +45,7 @@ export const grandmasters: Grandmaster[] = [
       "World Rapid and Blitz Champion multiple times",
     ],
     famousGame: "Carlsen vs. Karjakin, World Championship 2016 - Game 10, showing his endgame mastery",
-    imagePath: "/images/gm/carlsen.jpeg",
+    imagePath: "/images/gm/carlsen.jpg",
   },
   {
     id: "tal",
@@ -68,21 +68,21 @@ export const grandmasters: Grandmaster[] = [
       "Winner of multiple international tournaments",
     ],
     famousGame: "Tal vs. Botvinnik, World Championship 1960 - Game 6, featuring a stunning queen sacrifice",
-    imagePath: "/images/gm/tal.jpeg",
+    imagePath: "/images/gm/tal.jpg",
   },
   {
     id: "capablanca",
     name: "José Raúl Capablanca",
     years: "1888 - 1942",
     description:
-      "Known as 'The Chess Machine', Capablanca was renowned for his clean, positional style and endgame mastery. He made chess look effortless with his elegant and precise play, rarely making tactical errors.",
+      "Known as 'The Chess Machine', Capablanca was renowned for his clean, positional style and unparalleled endgame mastery. His play appeared effortless, with a natural talent for smoothly transitioning into winning endgames.",
     playstyle: {
-      aggression: 0.4,
+      aggression: 0.3,
       positional: 0.98,
-      tactical: 0.8,
-      defensive: 0.95,
-      riskTaking: 0.25,
-      endgame: 0.98,
+      tactical: 0.70,
+      defensive: 0.92,
+      riskTaking: 0.2,
+      endgame: 1.0,
       openingRepertoire: ["Queen's Gambit", "Ruy Lopez", "Nimzo-Indian Defense"],
     },
     achievements: [
@@ -91,15 +91,15 @@ export const grandmasters: Grandmaster[] = [
       "Considered one of the greatest endgame players of all time",
     ],
     famousGame:
-      "Capablanca vs. Marshall, New York 1918 - demonstrating his defensive skills against Marshall's famous attack",
-    imagePath: "/images/gm/capablanca.jpeg",
+      "Capablanca vs. Marshall, New York 1918 - demonstrating his defensive skills and endgame precision against Marshall's aggressive play",
+    imagePath: "/images/gm/capablanca.jpg",
   },
   {
     id: "fischer",
     name: "Bobby Fischer",
     years: "1943 - 2008",
     description:
-      "Fischer combined exceptional tactical ability with deep strategic understanding. His precise, clear style and opening innovations revolutionized chess. He was known for his determination and uncompromising approach.",
+      "Fischer combined exceptional tactical ability with deep strategic understanding. His precise, clear style and opening innovations revolutionized chess. Known for his determination and uncompromising approach, Fischer left a lasting mark on the chess world.",
     playstyle: {
       aggression: 0.75,
       positional: 0.9,
@@ -115,40 +115,40 @@ export const grandmasters: Grandmaster[] = [
       "Achieved the first 6-0 score in a Candidates match (vs. Taimanov)",
     ],
     famousGame:
-      "Fischer vs. Spassky, World Championship 1972 - Game 6, considered one of the greatest games ever played",
-    imagePath: "/images/gm/fischer.jpeg",
+      "Fischer vs. Spassky, World Championship 1972 - Game 6, regarded as one of the greatest games ever played",
+    imagePath: "/images/gm/fischer.jpg",
   },
   {
     id: "karpov",
     name: "Anatoly Karpov",
     years: "1951 - present",
     description:
-      "Karpov is known for his positional and strategic style, often described as 'boa constrictor' chess. He would gradually accumulate small advantages and squeeze his opponents without giving them counterplay.",
+      "Karpov is known for his suffocating positional style and strategic finesse. His play is characterized by precise maneuvering and gradual accumulation of advantages, earning him a reputation as one of the most formidable defensive strategists.",
     playstyle: {
       aggression: 0.35,
-      positional: 0.98,
-      tactical: 0.8,
-      defensive: 0.95,
-      riskTaking: 0.25,
+      positional: 0.99,
+      tactical: 0.80,
+      defensive: 0.97,
+      riskTaking: 0.15,
       endgame: 0.95,
       openingRepertoire: ["Ruy Lopez", "Queen's Gambit", "Caro-Kann Defense"],
     },
     achievements: [
       "World Chess Champion (1975-1985)",
       "Over 160 first-place tournament finishes",
-      "Played five epic World Championship matches against Garry Kasparov",
+      "Five epic World Championship matches against Garry Kasparov",
     ],
-    famousGame: "Karpov vs. Kasparov, World Championship 1985 - Game 16, showing his positional mastery",
-    imagePath: "/images/gm/karpov.jpeg",
+    famousGame: "Karpov vs. Kasparov, World Championship 1985 - Game 16, demonstrating his meticulous positional mastery",
+    imagePath: "/images/gm/karpov.jpg",
   },
   {
     id: "anand",
     name: "Viswanathan Anand",
     years: "1969 - present",
     description:
-      "Known as 'The Lightning Kid' for his quick play, Anand is a universal player with a balanced style. He combines tactical sharpness with solid positional understanding and is known for his opening preparation.",
+      "Known as 'The Lightning Kid' for his rapid play, Anand is celebrated for his blend of tactical sharpness and solid positional foundations. His quick thinking and extensive opening preparation make him a formidable opponent in any format.",
     playstyle: {
-      aggression: 0.45,
+      aggression: 0.55,
       positional: 0.75,
       tactical: 0.95,
       defensive: 0.65,
@@ -161,15 +161,15 @@ export const grandmasters: Grandmaster[] = [
       "First Asian to become World Champion",
       "Won World Championship in multiple formats (Tournament, Match, Knockout)",
     ],
-    famousGame: "Anand vs. Kramnik, World Championship 2008 - Game 3, showing his deep opening preparation",
-    imagePath: "/images/gm/anand.jpeg",
+    famousGame: "Anand vs. Kramnik, World Championship 2008 - Game 3, exhibiting his deep opening expertise",
+    imagePath: "/images/gm/anand.jpg",
   },
   {
     id: "kramnik",
     name: "Vladimir Kramnik",
     years: "1975 - present",
     description:
-      "Kramnik is known for his solid, technical style and deep strategic understanding. He combines strong positional play with excellent defensive skills and precise calculation.",
+      "Kramnik is recognized for his calm, solid style and deep strategic insights. His game is marked by brilliant defensive play and precise calculation, often neutralizing his opponent's initiatives.",
     playstyle: {
       aggression: 0.45,
       positional: 0.95,
@@ -181,10 +181,33 @@ export const grandmasters: Grandmaster[] = [
     },
     achievements: [
       "World Chess Champion (2000-2007)",
-      "Defeated Garry Kasparov in 2000 World Championship",
+      "Defeated Garry Kasparov in the 2000 World Championship",
       "Unified the World Chess Championship in 2006",
     ],
-    famousGame: "Kramnik vs. Kasparov, World Championship 2000 - Game 2, featuring his Berlin Defense",
+    famousGame: "Kramnik vs. Kasparov, World Championship 2000 - Game 2, featuring his innovative Berlin Defense",
     imagePath: "/images/gm/kramnik.jpeg",
+  },
+  {
+    id: "nakamura",
+    name: "Hikaru Nakamura",
+    years: "1987 - present",
+    description:
+      "Hikaru Nakamura is renowned for his speed, tactical prowess, and innovative approach to modern chess. Beyond his over-the-board success, he has redefined online chess with his dynamic streaming and rapid play.",
+    playstyle: {
+      aggression: 0.8,
+      positional: 0.75,
+      tactical: 0.9,
+      defensive: 0.8,
+      riskTaking: 0.85,
+      endgame: 0.8,
+      openingRepertoire: ["Sicilian Defense", "King's Indian Defense", "Reti Opening"],
+    },
+    achievements: [
+      "Multiple-time U.S. Chess Champion",
+      "World-class blitz and rapid tournament successes",
+      "Pioneer of the online chess streaming revolution",
+    ],
+    famousGame: "Nakamura in various online blitz battles where his creative tactics often turned the tide in his favor",
+    imagePath: "/images/gm/hikaru.jpg",
   },
 ]

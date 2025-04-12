@@ -96,6 +96,7 @@ export function GrandmasterMatch({ grandmaster, playstyle, side }: GrandmasterMa
               alt={gmData.name}
               width={128}
               height={128}
+              quality={100}
               className="object-cover w-full h-full"
             />
           </div>

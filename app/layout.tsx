@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Chess Style Analyzer",
+  title: "Chess GM TWIN",
   description: "Analyze your chess style and discover which famous Grandmaster you play like.",
     generator: 'v0.dev'
 }

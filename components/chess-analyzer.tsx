@@ -32,7 +32,7 @@ export function ChessAnalyzer() {
   const [engineLoaded, setEngineLoaded] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
   const [placeholderDetected, setPlaceholderDetected] = useState(false)
-  const [inputMethod, setInputMethod] = useState<"file" | "text" | "chesscom">("file")
+  const [inputMethod, setInputMethod] = useState<"chesscom" | "text" | "file">("chesscom")
   const [pgnText, setPgnText] = useState("")
   const [cancelAnalysisRef, setCancelAnalysisRef] = useState(useRef(false))
   const [showResult, setShowResult] = useState(false)
@@ -236,35 +236,36 @@ export function ChessAnalyzer() {
               </div>
 
               <div className="flex space-x-2 bg-black/30 p-1 rounded-full">
-                <button
-                  onClick={() => setInputMethod("file")}
-                  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
-                    inputMethod === "file" ? "bg-tiktok-red text-white font-medium" : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  <Upload size={16} />
-                  <span className="pointer-events-none">Upload PGN</span>
-                </button>
-                <button
-                  onClick={() => setInputMethod("text")}
-                  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
-                    inputMethod === "text" ? "bg-tiktok-red text-white font-medium" : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  <FileText size={16} />
-                  <span className="pointer-events-none">Paste PGN</span>
-                </button>
-                <button
-                  onClick={() => setInputMethod("chesscom")}
-                  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
-                    inputMethod === "chesscom"
-                      ? "bg-tiktok-red text-white font-medium"
-                      : "text-white/70 hover:text-white"
-                  }`}
-                >
-                  <Link2 size={16} />
-                  <span className="pointer-events-none">Chess.com</span>
-                </button>
+              <button
+  onClick={() => setInputMethod("chesscom")}
+  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
+    inputMethod === "chesscom"
+      ? "bg-tiktok-red text-white font-medium"
+      : "text-white/70 hover:text-white"
+  }`}
+>
+  <Link2 size={16} />
+  <span className="pointer-events-none">Chess.com</span>
+</button>
+<button
+  onClick={() => setInputMethod("text")}
+  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
+    inputMethod === "text" ? "bg-tiktok-red text-white font-medium" : "text-white/70 hover:text-white"
+  }`}
+>
+  <FileText size={16} />
+  <span className="pointer-events-none">Paste PGN</span>
+</button>
+<button
+  onClick={() => setInputMethod("file")}
+  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
+    inputMethod === "file" ? "bg-tiktok-red text-white font-medium" : "text-white/70 hover:text-white"
+  }`}
+>
+  <Upload size={16} />
+  <span className="pointer-events-none">Upload PGN</span>
+</button>
+
               </div>
 
               <div>
