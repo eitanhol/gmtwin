@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Chess Style Analyzer
 
-## Getting Started
+A web application that analyzes your chess games and tells you which famous grandmaster your playing style resembles.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Upload PGN files or paste PGN text
+- Analyze games with Stockfish chess engine
+- View detailed playstyle metrics
+- Match your style with famous grandmasters
+- Review your game with computer analysis
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone this repository
+2. Install dependencies with `npm install`
+3. **Important**: Download both Stockfish.js and Stockfish.wasm files and place them in the `public` directory
+4. Run the development server with `npm run dev`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Stockfish Setup
 
-## Learn More
+The application requires both `stockfish.js` and `stockfish.wasm` files to be present in the `public` directory. You can obtain these files by:
 
-To learn more about Next.js, take a look at the following resources:
+### Option 1: Download pre-built files
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Visit the [Stockfish.js releases page](https://github.com/nmrugg/stockfish.js/releases)
+2. Download the latest release
+3. Extract the files and copy `stockfish.js` and `stockfish.wasm` to your project's `public` directory
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Option 2: Build from source
 
-## Deploy on Vercel
+1. Clone the Stockfish.js repository: `git clone https://github.com/nmrugg/stockfish.js.git`
+2. Follow the build instructions in the repository
+3. Copy the resulting `stockfish.js` and `stockfish.wasm` files to your project's `public` directory
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Verifying the setup
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+After placing the files in the `public` directory, you should be able to access them at:
+- `http://localhost:3000/stockfish.js`
+- `http://localhost:3000/stockfish.wasm`
+
+If these URLs return the files correctly, the chess engine should work properly.
+
+## Using the Application
+
+1. Upload a PGN file or paste PGN text
+2. Select which player to analyze (White or Black)
+3. Choose between standard or deep analysis
+4. Click "Analyze Game"
+5. View the results in the tabs below
+
+## License
+
+MIT
