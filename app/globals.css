@@ -117,6 +117,34 @@
   .chess-piece-shadow {
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
   }
+
+  .tiktok-red {
+    @apply bg-[#EE1D52];
+  }
+
+  .text-tiktok-red {
+    @apply text-[#EE1D52];
+  }
+
+  .border-tiktok-red {
+    @apply border-[#EE1D52];
+  }
+
+  .from-tiktok-red {
+    @apply from-[#EE1D52];
+  }
+
+  .to-tiktok-red {
+    @apply to-[#EE1D52];
+  }
+
+  .bg-tiktok-red {
+    @apply bg-[#EE1D52];
+  }
+
+  .hover\:bg-tiktok-red\/90:hover {
+    @apply hover:bg-[#EE1D52]/90;
+  }
 }
 
 /* Animated background */
@@ -212,4 +240,19 @@
 .animate-spin-slow {
   animation: spin-slow 12s linear infinite;
   will-change: transform;
+}
+
+/* Optimize animations for better performance */
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
 }

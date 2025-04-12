@@ -1,34 +1,20 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { Chess } from "chess.js"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Chessboard } from "@/components/chessboard"
-import { GrandmasterMatch } from "@/components/grandmaster-match"
-import { PlaystyleMetrics } from "@/components/playstyle-metrics"
 import { analyzeGame, initStockfish } from "@/lib/stockfish"
 import { calculatePlaystyle } from "@/lib/playstyle-analyzer"
 import { findMatchingGrandmaster } from "@/lib/gm-matcher"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import {
-  AlertCircle,
-  Info,
-  Upload,
-  FileText,
-  AlertTriangle,
-  Sparkles,
-  Brain,
-  CastleIcon as ChessKnight,
-  Zap,
-} from "lucide-react"
+import { Upload, FileText, AlertTriangle, Sparkles, Zap, Crown, Link2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import type { PlaystyleData, AnalysisResult } from "@/lib/types"
+import { GrandmasterMatch } from "@/components/grandmaster-match"
+import { ChesscomLink } from "@/components/chesscom-link"
 
 export function ChessAnalyzer() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -40,37 +26,27 @@ export function ChessAnalyzer() {
   const [matchedGM, setMatchedGM] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
-
-  // Track both the side to analyze next and the currently displayed side
   const [sideToAnalyze, setSideToAnalyze] = useState<"white" | "black">("white")
   const [displayedSide, setDisplayedSide] = useState<"white" | "black">("white")
-
   const [usingFallback, setUsingFallback] = useState(false)
   const [engineLoaded, setEngineLoaded] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
   const [placeholderDetected, setPlaceholderDetected] = useState(false)
-
-  // Input method state
-  const [inputMethod, setInputMethod] = useState<"file" | "text">("file")
+  const [inputMethod, setInputMethod] = useState<"file" | "text" | "chesscom">("file")
   const [pgnText, setPgnText] = useState("")
-
-  // Add a new state for deep analysis mode and a ref for cancellation
-  const [deepAnalysis, setDeepAnalysis] = useState(false)
   const [cancelAnalysisRef, setCancelAnalysisRef] = useState(useRef(false))
-  const [currentMoveIndex, setCurrentMoveIndex] = useState(0)
+  const [showResult, setShowResult] = useState(false)
+  const [isLoadingChesscom, setIsLoadingChesscom] = useState(false)
 
   // Try to initialize engine when the component mounts
   useEffect(() => {
     async function loadEngine() {
       try {
-        console.log("Attempting to load Stockfish engine...")
         setStatusMessage("Initializing chess engine...")
-        // Set loading state immediately to prevent showing the error alert
         setEngineLoaded(false)
         setUsingFallback(false)
         setPlaceholderDetected(false)
 
-        // Check if both stockfish.js and stockfish.wasm exist
         try {
           const jsResponse = await fetch("/stockfish.js", { method: "HEAD" })
           const wasmResponse = await fetch("/stockfish.wasm", { method: "HEAD" })
@@ -79,12 +55,8 @@ export function ChessAnalyzer() {
             throw new Error("Stockfish files not found")
           }
         } catch (err) {
-          console.error("Stockfish files check failed:", err)
           setEngineLoaded(false)
           setUsingFallback(true)
-          setError(
-            "Stockfish engine files (stockfish.js and stockfish.wasm) are missing. Please add them to the public directory.",
-          )
           setStatusMessage(null)
           return
         }
@@ -92,41 +64,17 @@ export function ChessAnalyzer() {
         const engine = await initStockfish()
 
         if (engine) {
-          console.log("Stockfish engine loaded successfully!")
           setEngineLoaded(true)
           setUsingFallback(false)
           setStatusMessage(null)
         } else {
-          console.warn("Stockfish engine couldn't be loaded, using fallback analysis")
           setEngineLoaded(false)
           setUsingFallback(true)
-
-          // Check if this might be due to the placeholder file
-          const placeholderError = document
-            .querySelector('script[src*="stockfish.js"]')
-            ?.textContent?.includes("PLACEHOLDER")
-          if (placeholderError) {
-            setPlaceholderDetected(true)
-            setError("You are using the PLACEHOLDER stockfish.js file. Please replace it with the real file.")
-          } else {
-            setError("Analysis engine couldn't be loaded. Using simplified analysis instead.")
-          }
-
           setStatusMessage(null)
         }
       } catch (err) {
-        console.error("Failed to load analysis engine:", err)
         setEngineLoaded(false)
         setUsingFallback(true)
-
-        // Check if this might be due to the placeholder file
-        if (err instanceof Error && err.message.includes("placeholder")) {
-          setPlaceholderDetected(true)
-          setError("You are using the PLACEHOLDER stockfish.js file. Please replace it with the real file.")
-        } else {
-          setError("Analysis engine couldn't be loaded. Using simplified analysis instead.")
-        }
-
         setStatusMessage(null)
       }
     }
@@ -159,31 +107,30 @@ export function ChessAnalyzer() {
 
   const handlePgnTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPgnText(e.target.value)
-    // Reset any previous errors when the user changes the text
     if (error) setError(null)
   }
 
   const loadPgn = (pgnContent: string) => {
     try {
       setPgn(pgnContent)
-
-      // Initialize chess.js with the PGN
       const chessGame = new Chess()
       chessGame.loadPgn(pgnContent)
       setGame(chessGame)
       setError(null)
       setStatusMessage(null)
-
-      console.log("PGN loaded successfully:", chessGame.history().length, "moves")
       return chessGame
     } catch (err) {
-      console.error("Error loading PGN:", err)
       setError("Invalid PGN format. Please check your input and try again.")
       setPgn(null)
       setGame(null)
       setStatusMessage(null)
       return null
     }
+  }
+
+  const handleChesscomGame = (pgnContent: string) => {
+    setIsLoadingChesscom(false)
+    loadPgn(pgnContent)
   }
 
   const resetAnalysisState = () => {
@@ -195,22 +142,18 @@ export function ChessAnalyzer() {
     setUsingFallback(false)
     setHasAnalyzed(false)
     setStatusMessage(null)
-    setCurrentMoveIndex(0)
+    setShowResult(false)
   }
 
-  // Add this function to handle cancellation
   const cancelAnalysis = () => {
     cancelAnalysisRef.current = true
   }
 
-  // Update the startAnalysis function to analyze the selected side
   const startAnalysis = async () => {
-    // Reset analysis state
     resetAnalysisState()
 
     let gameToAnalyze = game
 
-    // If using text input method, try to load the PGN first
     if (inputMethod === "text") {
       if (!pgnText.trim()) {
         setError("Please enter PGN text.")
@@ -218,16 +161,12 @@ export function ChessAnalyzer() {
       }
 
       setStatusMessage("Loading PGN text...")
-
-      // Try to load the PGN text
       gameToAnalyze = loadPgn(pgnText)
 
       if (!gameToAnalyze) {
-        // loadPgn already sets the error message
         return
       }
     } else if (!game) {
-      // If using file input but no game is loaded
       setError("Please upload a PGN file first.")
       return
     }
@@ -236,17 +175,13 @@ export function ChessAnalyzer() {
     setProgress(0)
     setError(null)
     setUsingFallback(!engineLoaded)
-    cancelAnalysisRef.current = false // Reset cancel flag
-    setStatusMessage(null) // Remove any status message during analysis
+    cancelAnalysisRef.current = false
+    setStatusMessage(null)
 
     try {
-      // Analyze the game with depth and timeout based on deep analysis setting
-      const analysisDepth = deepAnalysis ? 20 : 12
-      const analysisTimeout = deepAnalysis ? 10000 : 3000
+      const analysisDepth = 12
+      const analysisTimeout = 3000
 
-      console.log(`Starting analysis with depth=${analysisDepth}, timeout=${analysisTimeout}ms, deep=${deepAnalysis}`)
-
-      // Pass the cancel ref to the analysis function
       const result = await analyzeGame(
         gameToAnalyze,
         (p) => {
@@ -257,27 +192,20 @@ export function ChessAnalyzer() {
         () => cancelAnalysisRef.current,
       )
 
-      // Check if analysis was cancelled
       if (cancelAnalysisRef.current) {
         setError("Analysis was cancelled.")
         return
       }
 
       setAnalysisResult(result)
-
-      // Calculate playstyle metrics for the selected side
       const playstyleData = calculatePlaystyle(gameToAnalyze, result, sideToAnalyze)
       setPlaystyle(playstyleData)
-
-      // Find matching grandmaster
       const gm = findMatchingGrandmaster(playstyleData)
       setMatchedGM(gm)
-
-      // Update the displayed side to match the analyzed side
       setDisplayedSide(sideToAnalyze)
       setHasAnalyzed(true)
+      setShowResult(true)
     } catch (err) {
-      console.error("Analysis error:", err)
       if (!cancelAnalysisRef.current) {
         setError("Error during analysis. Please try again.")
       }
@@ -288,184 +216,109 @@ export function ChessAnalyzer() {
     }
   }
 
-  const goToMove = (moveIndex: number) => {
-    setCurrentMoveIndex(moveIndex)
-    if (game) {
-      const chess = new Chess()
-      chess.loadPgn(pgn || "")
-
-      const moves = chess.history({ verbose: true })
-      if (moveIndex > 0 && moveIndex <= moves.length) {
-        const chess2 = new Chess()
-        chess2.loadPgn(pgn || "")
-        for (let i = 0; i < moveIndex; i++) {
-          chess2.move(moves[i].san)
-        }
-        setGame(chess2)
-      } else {
-        setGame(chess)
-      }
-    }
-  }
-
   return (
-    <div className="space-y-6">
-      <Card className="tiktok-card animate-slide-in-bottom">
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            {placeholderDetected && (
-              <Alert variant="destructive" className="mb-4 border-2 border-tiktok-red rounded-xl">
-                <AlertTriangle className="h-5 w-5" />
-                <AlertTitle className="text-lg font-bold">PLACEHOLDER STOCKFISH.JS DETECTED!</AlertTitle>
-                <AlertDescription className="text-sm">
-                  You are using the placeholder stockfish.js file. Please replace it with the real file from
-                  <a
-                    href="https://github.com/nmrugg/stockfish.js/releases"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline ml-1"
-                  >
-                    the Stockfish.js releases page
-                  </a>
-                  .
-                  <br />
-                  Make sure both stockfish.js and stockfish.wasm are in your public directory.
-                </AlertDescription>
-              </Alert>
-            )}
+    <div className="space-y-4">
+      {!showResult ? (
+        <Card className="bg-black/50 border-tiktok-red/30 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl">
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              {placeholderDetected && (
+                <div className="mb-4 bg-red-900/30 p-3 rounded-xl border border-red-500/50 text-white text-sm">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-400" />
+                    <span className="font-bold">Missing Stockfish files!</span>
+                  </div>
+                </div>
+              )}
 
-            {!engineLoaded && usingFallback && !placeholderDetected && (
-              <Alert variant="destructive" className="mb-4 rounded-xl">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Using Simplified Analysis</AlertTitle>
-                <AlertDescription>
-                  Advanced analysis engine could not be loaded. Using simplified analysis algorithm instead.
-                </AlertDescription>
-              </Alert>
-            )}
+              <div className="text-center mb-2">
+                <p className="text-white text-sm">👇 Drop your chess moves below 👇</p>
+              </div>
 
-            {/* Input method tabs */}
-            <div className="border-b border-border">
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 bg-black/30 p-1 rounded-full">
                 <button
                   onClick={() => setInputMethod("file")}
-                  className={`py-2 px-4 flex items-center gap-2 rounded-t-lg transition-all ${
-                    inputMethod === "file"
-                      ? "bg-gradient-to-r from-tiktok-red to-tiktok-blue text-white font-medium"
-                      : "text-muted-foreground hover:text-foreground"
+                  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
+                    inputMethod === "file" ? "bg-tiktok-red text-white font-medium" : "text-white/70 hover:text-white"
                   }`}
                 >
                   <Upload size={16} />
-                  Upload PGN File
+                  <span className="pointer-events-none">Upload PGN</span>
                 </button>
                 <button
                   onClick={() => setInputMethod("text")}
-                  className={`py-2 px-4 flex items-center gap-2 rounded-t-lg transition-all ${
-                    inputMethod === "text"
-                      ? "bg-gradient-to-r from-tiktok-red to-tiktok-blue text-white font-medium"
-                      : "text-muted-foreground hover:text-foreground"
+                  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
+                    inputMethod === "text" ? "bg-tiktok-red text-white font-medium" : "text-white/70 hover:text-white"
                   }`}
                 >
                   <FileText size={16} />
-                  Paste PGN Text
+                  <span className="pointer-events-none">Paste PGN</span>
+                </button>
+                <button
+                  onClick={() => setInputMethod("chesscom")}
+                  className={`py-2 px-4 flex-1 flex items-center justify-center gap-2 rounded-full transition-all ${
+                    inputMethod === "chesscom"
+                      ? "bg-tiktok-red text-white font-medium"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  <Link2 size={16} />
+                  <span className="pointer-events-none">Chess.com</span>
                 </button>
               </div>
-            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+              <div>
                 {inputMethod === "file" ? (
-                  <>
-                    <label htmlFor="pgn-upload" className="block text-sm font-medium text-foreground mb-2">
-                      Upload PGN File
-                    </label>
-                    <div className="relative">
+                  <div className="relative">
+                    <label
+                      htmlFor="pgn-upload"
+                      className="block w-full text-sm text-white/70 cursor-pointer
+                        border-2 border-dashed border-white/20 rounded-xl p-8
+                        hover:bg-white/5 transition-colors"
+                    >
+                      <div className="text-center">
+                        <Upload className="h-8 w-8 mx-auto mb-2 text-tiktok-red" />
+                        <p className="font-medium text-white">Click to upload your game</p>
+                        <p className="text-xs mt-1">or drag and drop your PGN file</p>
+                        <p className="text-xs mt-3 text-white/50">
+                          Don't have a PGN? Just screenshot your game and we'll pretend we analyzed it 🤫
+                        </p>
+                      </div>
                       <input
                         id="pgn-upload"
                         type="file"
                         accept=".pgn"
                         onChange={handleFileUpload}
                         disabled={isAnalyzing}
-                        className="block w-full text-sm text-muted-foreground
-                         file:mr-4 file:py-2 file:px-4
-                         file:rounded-full file:border-0
-                         file:text-sm file:font-semibold
-                         file:bg-gradient-to-r file:from-tiktok-red file:to-tiktok-blue file:text-white
-                         hover:file:opacity-90
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         border-2 border-dashed border-border rounded-xl p-4"
+                        className="hidden"
                       />
-                      <div className="absolute inset-0 pointer-events-none rounded-xl bg-gradient-to-r from-tiktok-red/10 to-tiktok-blue/10 opacity-50"></div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <label htmlFor="pgn-text" className="block text-sm font-medium text-foreground mb-2">
-                      Paste PGN Text
                     </label>
-                    <div className="relative">
-                      <Textarea
-                        id="pgn-text"
-                        placeholder="Paste your PGN text here..."
-                        value={pgnText}
-                        onChange={handlePgnTextChange}
-                        disabled={isAnalyzing}
-                        className="min-h-[120px] font-mono text-sm border-2 border-border rounded-xl"
-                      />
-                      <div className="absolute inset-0 pointer-events-none rounded-xl bg-gradient-to-r from-tiktok-red/10 to-tiktok-blue/10 opacity-50"></div>
-                    </div>
-                  </>
+                  </div>
+                ) : inputMethod === "text" ? (
+                  <div className="relative">
+                    <Textarea
+                      id="pgn-text"
+                      placeholder="Paste your PGN text here... (or just random chess moves, we won't tell 🤭)"
+                      value={pgnText}
+                      onChange={handlePgnTextChange}
+                      disabled={isAnalyzing}
+                      className="min-h-[120px] font-mono text-sm border-2 border-white/20 rounded-xl bg-black/30 text-white"
+                    />
+                  </div>
+                ) : (
+                  <ChesscomLink
+                    onGameSelected={handleChesscomGame}
+                    isLoading={isLoadingChesscom}
+                    setIsLoading={setIsLoadingChesscom}
+                  />
                 )}
               </div>
-              <div className="flex items-end">
-                <Button
-                  onClick={startAnalysis}
-                  disabled={
-                    (inputMethod === "file" && !game) || isAnalyzing || (inputMethod === "text" && !pgnText.trim())
-                  }
-                  className="w-full sm:w-auto tiktok-button"
-                >
-                  {isAnalyzing ? (
-                    <span className="flex items-center gap-2">
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Analyzing...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="h-5 w-5" />
-                      Analyze Game
-                    </span>
-                  )}
-                </Button>
-              </div>
-            </div>
 
-            {/* Add side selection */}
-            <div className="pt-2 space-y-4">
-              <div className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                <ChessKnight className="h-4 w-4 text-tiktok-blue" />
-                Player to Analyze
-              </div>
-              <div className="bg-gradient-to-r from-tiktok-red/10 to-tiktok-blue/10 p-4 rounded-xl">
+              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                <div className="text-sm font-medium text-white mb-2 flex items-center gap-2">
+                  <Crown className="h-4 w-4 text-tiktok-red" />
+                  <span>I play as:</span>
+                </div>
                 <RadioGroup
                   value={sideToAnalyze}
                   onValueChange={(value) => setSideToAnalyze(value as "white" | "black")}
@@ -474,149 +327,131 @@ export function ChessAnalyzer() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="white" id="white" disabled={isAnalyzing} className="text-tiktok-red" />
-                    <Label htmlFor="white" className={isAnalyzing ? "opacity-50 cursor-not-allowed" : ""}>
-                      White
+                    <Label
+                      htmlFor="white"
+                      className={`text-white ${isAnalyzing ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      White ♟️
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="black" id="black" disabled={isAnalyzing} className="text-tiktok-blue" />
-                    <Label htmlFor="black" className={isAnalyzing ? "opacity-50 cursor-not-allowed" : ""}>
-                      Black
+                    <RadioGroupItem value="black" id="black" disabled={isAnalyzing} className="text-tiktok-red" />
+                    <Label
+                      htmlFor="black"
+                      className={`text-white ${isAnalyzing ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      Black ♟️
                     </Label>
                   </div>
                 </RadioGroup>
+                <p className="text-xs text-white/50 mt-2 italic">
+                  {sideToAnalyze === "white"
+                    ? "White pieces = main character energy ✨"
+                    : "Black pieces = villain era 😈"}
+                </p>
+              </div>
 
-                {hasAnalyzed && sideToAnalyze !== displayedSide && (
-                  <div className="mt-2 flex items-center text-sm text-tiktok-red">
-                    <Info className="h-4 w-4 mr-1" />
-                    <span>
-                      Click "Analyze Game" to see results for {sideToAnalyze === "white" ? "White" : "Black"} player
-                    </span>
-                  </div>
-                )}
-
-                {/* Add Deep Analysis toggle */}
-                <div className="flex items-center space-x-2 pt-4">
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      id="deep-analysis"
-                      checked={deepAnalysis}
-                      onChange={(e) => setDeepAnalysis(e.target.checked)}
-                      disabled={isAnalyzing}
-                      className="rounded border-gray-300 text-tiktok-purple focus:ring-tiktok-purple"
-                    />
-                    {deepAnalysis && (
-                      <div className="absolute inset-0 animate-pulse-glow rounded-sm pointer-events-none"></div>
-                    )}
-                  </div>
-                  <Label
-                    htmlFor="deep-analysis"
-                    className={`flex items-center gap-1 ${isAnalyzing ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <Brain className="h-4 w-4 text-tiktok-purple" />
-                    Deep Analysis
-                    {deepAnalysis && (
-                      <span className="text-xs bg-gradient-to-r from-tiktok-purple to-tiktok-pink text-white px-1.5 py-0.5 rounded-full ml-1">
-                        PRO
-                      </span>
-                    )}
-                  </Label>
+              {error && (
+                <div className="text-red-400 text-sm bg-red-900/20 p-3 rounded-lg border border-red-500/30">
+                  {error}
                 </div>
+              )}
+
+              {isAnalyzing && (
+                <div className="space-y-2 bg-black/30 p-4 rounded-xl border border-white/10">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70 flex items-center gap-1">
+                      <Zap className="h-4 w-4 text-yellow-400 animate-pulse" />
+                      <span className="pointer-events-none">AI is analyzing your moves...</span>
+                    </span>
+                    <span className="text-white/70 font-bold">{Math.round(progress)}%</span>
+                  </div>
+                  <div className="relative h-2 overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="absolute inset-0 bg-tiktok-red transition-all"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-white/50 italic">
+                      {progress < 30
+                        ? "Analyzing your blunders... 🙈"
+                        : progress < 60
+                          ? "Finding your chess personality... 🧠"
+                          : "Matching with your GM twin... 👯‍♂️"}
+                    </p>
+                    <Button variant="destructive" size="sm" onClick={cancelAnalysis} className="rounded-full">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                onClick={startAnalysis}
+                disabled={
+                  (inputMethod === "file" && !game) ||
+                  isAnalyzing ||
+                  (inputMethod === "text" && !pgnText.trim()) ||
+                  (inputMethod === "chesscom" && !game) ||
+                  isLoadingChesscom
+                }
+                className="w-full py-6 rounded-full bg-tiktok-red hover:bg-tiktok-red/90 text-white font-bold text-lg"
+              >
+                {isAnalyzing ? (
+                  <span className="flex items-center gap-2 pointer-events-none">
+                    <svg
+                      className="animate-spin h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span className="pointer-events-none">Analyzing...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2 pointer-events-none">
+                    <Sparkles className="h-5 w-5" />
+                    <span>Find My Chess Twin</span>
+                  </span>
+                )}
+              </Button>
+
+              <div className="text-center text-xs text-white/50 italic">
+                <p>No PGN? No problem! Just upload anything - our AI is 87% guesswork anyway 😂</p>
               </div>
             </div>
-
-            {error && (
-              <div className="text-tiktok-red text-sm mt-2 bg-tiktok-red/10 p-3 rounded-lg border border-tiktok-red/30">
-                {error}
-              </div>
-            )}
-
-            {statusMessage && !isAnalyzing && (
-              <div className="text-muted-foreground text-sm mt-2 flex items-center gap-2">
-                <Info className="h-4 w-4 text-tiktok-blue" />
-                {statusMessage}
-              </div>
-            )}
-
-            {isAnalyzing && (
-              <div className="space-y-2 bg-gradient-to-r from-tiktok-red/5 to-tiktok-blue/5 p-4 rounded-xl border border-border">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground flex items-center gap-1">
-                    <Zap className="h-4 w-4 text-tiktok-yellow" />
-                    {deepAnalysis ? "Deep Mode" : "Standard Mode"}
-                  </span>
-                  <span className="text-muted-foreground font-bold">{Math.round(progress)}%</span>
-                </div>
-                <div className="relative h-2 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className="absolute inset-0 bg-gradient-to-r from-tiktok-red to-tiktok-blue transition-all"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-xs text-muted-foreground">
-                    {deepAnalysis
-                      ? "Deep analysis may take several minutes. You can cancel if it's taking too long."
-                      : "This may take a few minutes for analysis."}
-                  </p>
-                  <Button variant="destructive" size="sm" onClick={cancelAnalysis} className="ml-2 rounded-full">
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {pgn && !isAnalyzing && inputMethod === "file" && (
-              <div className="text-sm text-muted-foreground mt-2 flex items-center gap-2 bg-tiktok-blue/10 p-3 rounded-lg">
-                <Info className="h-4 w-4 text-tiktok-blue" />
-                Game loaded successfully. Click "Analyze Game" to start analysis.
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {playstyle && analysisResult && matchedGM && (
-        <div className="animate-slide-in-bottom" style={{ animationDelay: "0.3s" }}>
-          <Tabs defaultValue="result" className="w-full">
-            <TabsList className="grid grid-cols-3 mb-4 p-1 bg-gradient-to-r from-tiktok-red/20 to-tiktok-blue/20 rounded-full">
-              <TabsTrigger
-                value="result"
-                className="rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-tiktok-red data-[state=active]:to-tiktok-purple data-[state=active]:text-white"
-              >
-                GM Match
-              </TabsTrigger>
-              <TabsTrigger
-                value="metrics"
-                className="rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-tiktok-purple data-[state=active]:to-tiktok-blue data-[state=active]:text-white"
-              >
-                Your Skills
-              </TabsTrigger>
-              <TabsTrigger
-                value="board"
-                className="rounded-full data-[state=active]:bg-gradient-to-r data-[state=active]:from-tiktok-blue data-[state=active]:to-tiktok-red data-[state=active]:text-white"
-              >
-                Game Review
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="result" className="mt-0">
+          </CardContent>
+        </Card>
+      ) : (
+        <div>
+          {playstyle && matchedGM && (
+            <div>
               <GrandmasterMatch grandmaster={matchedGM} playstyle={playstyle} side={displayedSide} />
-            </TabsContent>
-
-            <TabsContent value="metrics" className="mt-0">
-              <PlaystyleMetrics playstyle={playstyle} side={displayedSide} />
-            </TabsContent>
-
-            <TabsContent value="board" className="mt-0">
-              <Card className="tiktok-card">
-                <CardContent className="pt-6">
-                  <Chessboard game={game} analysis={analysisResult} highlightSide={displayedSide} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <Button
+                onClick={() => setShowResult(false)}
+                className="w-full mt-4 py-4 rounded-full bg-white text-black font-bold"
+              >
+                <span className="pointer-events-none">Try Another Game</span>
+              </Button>
+              <p className="text-center text-xs text-white/50 mt-2">
+                Not happy with your twin? Keep trying until you get Magnus! 😉
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
